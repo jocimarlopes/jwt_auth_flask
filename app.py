@@ -1,4 +1,4 @@
-from flask import Flask, redirect, request, jsonify, make_response
+from flask import Flask, request, jsonify, make_response
 import jwt
 import datetime
 from functools import wraps
@@ -9,8 +9,8 @@ app.config['SECRET_KEY'] = 'exemplo'
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.args.get('token')
-        print(token)
+        headers = request.headers
+        token = headers['Token']
         if not token:
             return jsonify({'message': 'Token is missing!'}), 403
         try:
@@ -33,9 +33,9 @@ def protected():
 @app.route('/login')
 def login():
     auth = request.authorization
-    if auth and auth.password == 'teste':
+    if auth.username == 'teste' and auth.password == 'teste':
         token = jwt.encode({'user': auth.username, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'])
-        return redirect('/protected?token={}'.format(token))
+        return jsonify({'token': token})
     return make_response('Could verify!', 401, {'WWW-Authenticate':'Basic realm="Login Required"'})
 
 if __name__ == '__main__':
